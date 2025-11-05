@@ -14,3 +14,13 @@ motor = create_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread
 def obter_sessao():
     with Session(motor) as sess:
         yield sess
+
+from sqlmodel import create_engine
+
+def criar_engine(url: str, echo: bool = False):
+    """
+    Cria e retorna uma engine SQLModel/SQLAlchemy.
+    Para SQLite, desabilita check_same_thread automaticamente.
+    """
+    connect_args = {"check_same_thread": False} if "sqlite" in url else {}
+    return create_engine(url, echo=echo, connect_args=connect_args)

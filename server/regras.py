@@ -84,3 +84,58 @@ def processar_devolucao(sessao: Session, emprestimo: Emprestimo, data_devolucao_
     usuario = sessao.get(Usuario, emprestimo.usuario_id)
     if usuario:
         usuario.qtd_emprestimo = max(0, int(usuario.qtd_emprestimo) - 1)
+
+def calcular_multa(dias_atraso: int, multa_por_dia: float | None = None) -> float:
+    """
+    Calcula o valor total da multa com base nos dias de atraso e no valor por dia.
+    Usa o valor configurado em config.multa_por_dia se não for informado.
+    """
+    if dias_atraso <= 0:
+        return 0.0
+    if multa_por_dia is None:
+        multa_por_dia = getattr(config, "multa_por_dia", 1.50)
+    return dias_atraso * float(multa_por_dia)
+
+def validar_usuario(usuario: dict) -> None:
+    """
+    Valida se o usuário pode fazer empréstimos.
+    Lança ErroDeRegraNegocio se houver multa aberta.
+    """
+    if usuario.get("possui_multa_aberta", False):
+        raise ErroDeRegraNegocio("Usuário possui multa pendente.")
+
+
+def criar_emprestimo(sessao: Session, usuario_id: int, livro_id: int) -> Emprestimo:
+    """
+    Cria um novo empréstimo:
+      - valida usuário
+      - valida livro
+      - marca livro como indisponível
+      - incrementa qtd_emprestimo do usuário
+      - cria e retorna o objeto Emprestimo
+    """
+    # valida regras
+    garantir_usuario_pode_emprestar(sessao, usuario_id)
+    garantir_livro_disponivel(sessao, livro_id)
+
+    # marca livro como indisponível
+    livro = sessao.get(Livro, livro_id)
+    livro.disponivel = False
+
+    # incrementa empréstimos do usuário
+    usuario = sessao.get(Usuario, usuario_id)
+    usuario.qtd_emprestimo += 1
+
+    # cria empréstimo
+    emprestimo = Emprestimo(
+        usuario_id=usuario.id,
+        livro_id=livro.id,
+        data_emprestimo=date.today(),
+        data_devolucao_prevista=date.today()  # ou use alguma lógica de prazo padrão
+    )
+
+    sessao.add(emprestimo)
+    sessao.commit()
+    sessao.refresh(emprestimo)
+
+    return emprestimo
