@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from sqlmodel import Session, select
 from sqlmodel import col
 from fastapi import Query
+from fastapi import HTTPException
 
 
 from db.conexao import obter_sessao
@@ -87,13 +88,14 @@ class EmprestimoListDetalheOut(BaseModel):
 # =========================================================
 # LIVROS
 # =========================================================
-@app_rotas.post("/livros", response_model=LivroOut)
+@app_rotas.post("/livros", response_model=LivroOut, status_code=201)
 def criar_livro(payload: LivroIn, sessao: Session = Depends(obter_sessao)):
-    livro = Livro(**payload.model_dict())
+    livro = Livro(**payload.dict())  
     sessao.add(livro)
     sessao.commit()
     sessao.refresh(livro)
     return livro
+
 
 
 @app_rotas.get("/livros", response_model=List[LivroOut])
@@ -141,13 +143,30 @@ def remover_livro(livro_id: int, sessao: Session = Depends(obter_sessao)):
 # =========================================================
 # USUÁRIOS
 # =========================================================
-@app_rotas.post("/usuarios", response_model=UsuarioOut)
+from pydantic import BaseModel, EmailStr, constr
+
+class UsuarioIn(BaseModel):
+    nome: constr(min_length=1)
+    email: EmailStr
+
+@app_rotas.post("/usuarios", response_model=UsuarioOut, status_code=201)
 def criar_usuario(payload: UsuarioIn, sessao: Session = Depends(obter_sessao)):
-    usuario = Usuario(**payload.model_dump())
+    usuario = Usuario(
+        nome=payload.nome,
+        email=payload.email
+    )
     sessao.add(usuario)
     sessao.commit()
     sessao.refresh(usuario)
     return usuario
+
+@app_rotas.get("/usuarios/{usuario_id}", response_model=UsuarioOut)
+def get_usuario(usuario_id: int, sessao: Session = Depends(obter_sessao)):
+    usuario = sessao.get(Usuario, usuario_id)
+    if not usuario:
+        raise HTTPException(status_code=404, detail=f"Usuário {usuario_id} não encontrado")
+    return usuario
+
 
 @app_rotas.get("/usuarios", response_model=List[UsuarioOut])
 def listar_usuarios(

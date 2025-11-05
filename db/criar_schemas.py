@@ -238,3 +238,15 @@ if __name__ == "__main__":
     ddl.inserir_seed_se_vazio()
     ddl.mostrar_resumo()
     ddl.fechar()
+
+
+
+# debug
+
+# from pydantic import BaseModel, EmailStr, constr
+
+# class UsuarioIn(BaseModel):
+#     nome: constr(min_length=1)        # pelo menos 1 caractere
+#     email: EmailStr                    # valida formato de e-mail
+    
+    

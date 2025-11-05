@@ -173,3 +173,11 @@ def test_devolucao_data_invalida(sessao_fake, usuario_sem_multa, livro_disponive
     from configuracoes.excecoes import ErroDeRegraNegocio
     with pytest.raises(ErroDeRegraNegocio, match="Data de devolução não pode ser anterior"):
         regras.processar_devolucao(sessao_fake, emprestimo, data_invalida)
+
+def test_startup_carrega_seed(client):
+    # Apenas instanciando o client dispara evento de startup
+    from server.main import app
+    from server.main import carregar_seed_se_vazio
+    carregar_seed_se_vazio()
+    assert True  # se não lançar exceção, passou
+
