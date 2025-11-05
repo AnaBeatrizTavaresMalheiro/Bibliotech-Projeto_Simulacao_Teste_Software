@@ -95,3 +95,81 @@ def test_fluxo_completo_emprestimo_devolucao(sessao_fake, usuario_sem_multa, liv
     assert emprestimo.data_devolucao_real == datas["data_devolucao_real_no_prazo"]
     assert livro_disponivel.disponivel
     assert usuario_sem_multa.qtd_emprestimo == 0
+
+
+def test_emprestimo_usuario_com_multa(sessao_fake, livro_disponivel):
+    usuario = Usuario(id=2, nome="Bob", possui_multa_aberta=True, qtd_emprestimo=0)
+    sessao_fake.cadastrar(usuario)
+    sessao_fake.cadastrar(livro_disponivel)
+
+    with pytest.raises(ErroDeRegraNegocio, match="multa pendente"):
+        regras.criar_emprestimo(sessao_fake, usuario.id, livro_disponivel.id)
+
+
+def test_emprestimo_livro_indisponivel(sessao_fake, usuario_sem_multa):
+    livro = Livro(id=20, titulo="Livro Ocupado", disponivel=False)
+    sessao_fake.cadastrar(usuario_sem_multa)
+    sessao_fake.cadastrar(livro)
+
+    with pytest.raises(ErroDeRegraNegocio, match="indisponível"):
+        regras.criar_emprestimo(sessao_fake, usuario_sem_multa.id, livro.id)
+
+
+def test_devolucao_atrasada(sessao_fake, usuario_sem_multa, livro_disponivel, datas):
+    sessao_fake.cadastrar(usuario_sem_multa)
+    sessao_fake.cadastrar(livro_disponivel)
+
+    emprestimo = regras.criar_emprestimo(
+        sessao_fake,
+        usuario_sem_multa.id,
+        livro_disponivel.id,
+        data_emprestimo=datas["data_emprestimo"],
+        data_devolucao_prevista=datas["data_devolucao_prevista"]
+    )
+
+    regras.processar_devolucao(sessao_fake, emprestimo, datas["data_devolucao_real_atrasada"])
+
+    assert emprestimo.dias_atraso == 2
+    assert emprestimo.valor_multa > 0
+    assert usuario_sem_multa.qtd_emprestimo == 0
+    assert livro_disponivel.disponivel
+
+
+def test_devolucao_duplicada(sessao_fake, usuario_sem_multa, livro_disponivel, datas):
+    sessao_fake.cadastrar(usuario_sem_multa)
+    sessao_fake.cadastrar(livro_disponivel)
+
+    emprestimo = regras.criar_emprestimo(
+        sessao_fake,
+        usuario_sem_multa.id,
+        livro_disponivel.id,
+        data_emprestimo=datas["data_emprestimo"],
+        data_devolucao_prevista=datas["data_devolucao_prevista"]
+    )
+
+    regras.processar_devolucao(sessao_fake, emprestimo, datas["data_devolucao_real_no_prazo"])
+
+    with pytest.raises(ErroDeRegraNegocio, match="já foi devolvido"):
+        regras.processar_devolucao(sessao_fake, emprestimo, datas["data_devolucao_real_no_prazo"])
+
+
+def test_devolucao_data_invalida(sessao_fake, usuario_sem_multa, livro_disponivel, datas):
+    sessao_fake.cadastrar(usuario_sem_multa)
+    sessao_fake.cadastrar(livro_disponivel)
+
+    emprestimo = regras.criar_emprestimo(
+        sessao_fake,
+        usuario_sem_multa.id,
+        livro_disponivel.id,
+        data_emprestimo=datas["data_emprestimo"],
+        data_devolucao_prevista=datas["data_devolucao_prevista"]
+    )
+
+    # tenta devolver antes da data de empréstimo
+    from datetime import date
+    data_invalida = datas["data_emprestimo"] - timedelta(days=1)
+
+    import pytest
+    from configuracoes.excecoes import ErroDeRegraNegocio
+    with pytest.raises(ErroDeRegraNegocio, match="Data de devolução não pode ser anterior"):
+        regras.processar_devolucao(sessao_fake, emprestimo, data_invalida)
