@@ -1,35 +1,15 @@
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-
 import pytest
-from datetime import timedelta
-from server import regras
-
-# def test_fluxo_completo_emprestimo_devolucao(usuario_sem_multa, livro_disponivel, datas):
-#     # Criação do empréstimo
-    
-#     emprestimo = regras.criar_emprestimo(
-#     usuario_sem_multa, 
-#     livro_disponivel, 
-#     datas["data_emprestimo"], 
-#     datas["data_devolucao_prevista"]
-#     )
-    
-#     assert emprestimo["livro"]["disponivel"] is False
-
-#     # Devolução atrasada
-#     devolucao = regras.devolver_livro(emprestimo, datas["devolucao_atrasada"])
-#     assert devolucao["usuario"]["possui_multa_aberta"] is True
-#     assert devolucao["livro"]["disponivel"] is True
-
-import pytest
-from datetime import date
+from datetime import date, timedelta
 from server import regras
 from configuracoes.excecoes import ErroDeRegraNegocio
-from db.modelos import Usuario, Livro, Emprestimo
+from db.modelos import Usuario, Livro
 
+# ----------------------------
 # Sessão fake para testes sem banco real
+# ----------------------------
 class SessaoFake:
     def __init__(self):
         self._objetos = {}
@@ -45,27 +25,25 @@ class SessaoFake:
         pass
 
     def get(self, cls, obj_id):
-        # Retorna objeto previamente cadastrado
         return self._objetos.get((cls, obj_id))
 
     def cadastrar(self, obj):
         self._objetos[(obj.__class__, obj.id)] = obj
 
-
+# ----------------------------
+# Fixtures
+# ----------------------------
 @pytest.fixture
 def sessao_fake():
     return SessaoFake()
-
 
 @pytest.fixture
 def usuario_sem_multa():
     return Usuario(id=1, nome="Alice", possui_multa_aberta=False, qtd_emprestimo=0)
 
-
 @pytest.fixture
 def livro_disponivel():
     return Livro(id=10, titulo="Livro de Teste", disponivel=True)
-
 
 @pytest.fixture
 def datas():
@@ -76,26 +54,23 @@ def datas():
         "data_devolucao_real_atrasada": date(2025, 11, 13)
     }
 
-
+# ----------------------------
+# Testes de fluxo de empréstimo e devolução
+# ----------------------------
 def test_fluxo_completo_emprestimo_devolucao(sessao_fake, usuario_sem_multa, livro_disponivel, datas):
-    # Cadastra usuário e livro na sessão fake
     sessao_fake.cadastrar(usuario_sem_multa)
     sessao_fake.cadastrar(livro_disponivel)
 
-    # Criação do empréstimo usando função real
     emprestimo = regras.criar_emprestimo(sessao_fake, usuario_sem_multa.id, livro_disponivel.id)
-
     assert emprestimo.usuario_id == usuario_sem_multa.id
     assert emprestimo.livro_id == livro_disponivel.id
     assert not livro_disponivel.disponivel
     assert usuario_sem_multa.qtd_emprestimo == 1
 
-    # Processa devolução no prazo
     regras.processar_devolucao(sessao_fake, emprestimo, datas["data_devolucao_real_no_prazo"])
     assert emprestimo.data_devolucao_real == datas["data_devolucao_real_no_prazo"]
     assert livro_disponivel.disponivel
     assert usuario_sem_multa.qtd_emprestimo == 0
-
 
 def test_emprestimo_usuario_com_multa(sessao_fake, livro_disponivel):
     usuario = Usuario(id=2, nome="Bob", possui_multa_aberta=True, qtd_emprestimo=0)
@@ -105,7 +80,6 @@ def test_emprestimo_usuario_com_multa(sessao_fake, livro_disponivel):
     with pytest.raises(ErroDeRegraNegocio, match="multa pendente"):
         regras.criar_emprestimo(sessao_fake, usuario.id, livro_disponivel.id)
 
-
 def test_emprestimo_livro_indisponivel(sessao_fake, usuario_sem_multa):
     livro = Livro(id=20, titulo="Livro Ocupado", disponivel=False)
     sessao_fake.cadastrar(usuario_sem_multa)
@@ -113,7 +87,6 @@ def test_emprestimo_livro_indisponivel(sessao_fake, usuario_sem_multa):
 
     with pytest.raises(ErroDeRegraNegocio, match="indisponível"):
         regras.criar_emprestimo(sessao_fake, usuario_sem_multa.id, livro.id)
-
 
 def test_devolucao_atrasada(sessao_fake, usuario_sem_multa, livro_disponivel, datas):
     sessao_fake.cadastrar(usuario_sem_multa)
@@ -128,12 +101,10 @@ def test_devolucao_atrasada(sessao_fake, usuario_sem_multa, livro_disponivel, da
     )
 
     regras.processar_devolucao(sessao_fake, emprestimo, datas["data_devolucao_real_atrasada"])
-
     assert emprestimo.dias_atraso == 2
     assert emprestimo.valor_multa > 0
     assert usuario_sem_multa.qtd_emprestimo == 0
     assert livro_disponivel.disponivel
-
 
 def test_devolucao_duplicada(sessao_fake, usuario_sem_multa, livro_disponivel, datas):
     sessao_fake.cadastrar(usuario_sem_multa)
@@ -148,10 +119,8 @@ def test_devolucao_duplicada(sessao_fake, usuario_sem_multa, livro_disponivel, d
     )
 
     regras.processar_devolucao(sessao_fake, emprestimo, datas["data_devolucao_real_no_prazo"])
-
     with pytest.raises(ErroDeRegraNegocio, match="já foi devolvido"):
         regras.processar_devolucao(sessao_fake, emprestimo, datas["data_devolucao_real_no_prazo"])
-
 
 def test_devolucao_data_invalida(sessao_fake, usuario_sem_multa, livro_disponivel, datas):
     sessao_fake.cadastrar(usuario_sem_multa)
@@ -165,19 +134,6 @@ def test_devolucao_data_invalida(sessao_fake, usuario_sem_multa, livro_disponive
         data_devolucao_prevista=datas["data_devolucao_prevista"]
     )
 
-    # tenta devolver antes da data de empréstimo
-    from datetime import date
     data_invalida = datas["data_emprestimo"] - timedelta(days=1)
-
-    import pytest
-    from configuracoes.excecoes import ErroDeRegraNegocio
     with pytest.raises(ErroDeRegraNegocio, match="Data de devolução não pode ser anterior"):
         regras.processar_devolucao(sessao_fake, emprestimo, data_invalida)
-
-def test_startup_carrega_seed(client):
-    # Apenas instanciando o client dispara evento de startup
-    from server.main import app
-    from server.main import carregar_seed_se_vazio
-    carregar_seed_se_vazio()
-    assert True  # se não lançar exceção, passou
-

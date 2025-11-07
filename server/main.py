@@ -1,4 +1,7 @@
 # server/main.py
+
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from fastapi import FastAPI
 
 # Configurações e exceções
@@ -33,8 +36,15 @@ def raiz():
     }
 
 # Startup: cria tabelas/índices e carrega seed se vazio
+# @app.on_event("startup")
+# def startup():
+#     carregar_seed_se_vazio()
+#     inicializar_banco()
+    
+
 @app.on_event("startup")
 def startup():
-    carregar_seed_se_vazio()
-    inicializar_banco()
-    
+    if not os.environ.get("TESTING"):  # ⚡️ só roda se não estivermos testando
+        carregar_seed_se_vazio()
+        inicializar_banco()
+

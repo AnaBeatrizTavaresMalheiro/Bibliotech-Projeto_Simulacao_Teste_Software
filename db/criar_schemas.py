@@ -248,5 +248,74 @@ if __name__ == "__main__":
 # class UsuarioIn(BaseModel):
 #     nome: constr(min_length=1)        # pelo menos 1 caractere
 #     email: EmailStr                    # valida formato de e-mail
+
+
+
     
-    
+# from typing import Optional
+# from pydantic import BaseModel, EmailStr, constr
+# from datetime import date
+
+
+# # ==========================================================
+# # USUÁRIOS
+# # ==========================================================
+# class UsuarioIn(BaseModel):
+#     nome: constr(min_length=1)
+#     email: EmailStr
+
+
+# class UsuarioOut(BaseModel):
+#     id: int
+#     nome: str
+#     email: EmailStr
+
+#     class Config:
+#         orm_mode = True
+
+
+# class UsuarioUpdate(BaseModel):
+#     nome: Optional[str] = None
+#     email: Optional[EmailStr] = None
+
+
+# # ==========================================================
+# # LIVROS
+# # ==========================================================
+# class LivroIn(BaseModel):
+#     titulo: constr(min_length=1)
+#     isbn: constr(min_length=5)
+
+
+# class LivroOut(BaseModel):
+#     id: int
+#     titulo: str
+#     isbn: str
+#     disponivel: bool
+
+#     class Config:
+#         orm_mode = True
+
+
+# # ==========================================================
+# # EMPRÉSTIMOS
+# # ==========================================================
+# class EmprestimoIn(BaseModel):
+#     livro_id: int
+#     usuario_id: int
+#     data_emprestimo: date
+#     data_devolucao_prevista: date
+
+
+# class EmprestimoOut(BaseModel):
+#     id: int
+#     livro_id: int
+#     usuario_id: int
+#     data_emprestimo: date
+#     data_devolucao_prevista: date
+#     data_devolucao_real: Optional[date] = None
+#     dias_atraso: int
+#     valor_multa: float
+
+#     class Config:
+#         orm_mode = True
