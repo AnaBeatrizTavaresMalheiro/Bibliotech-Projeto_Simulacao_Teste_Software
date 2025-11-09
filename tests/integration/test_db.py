@@ -1,7 +1,9 @@
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from db import conexao, modelos
+from sqlmodel import Session, SQLModel
+from src.db.conexao import criar_engine
+from src.db import conexao, modelos
 
 def test_criar_tabelas_sqlite(tmp_path):
     db_path = tmp_path / "test.db"
@@ -12,12 +14,6 @@ def test_inserir_usuario_simplificado():
     usuario = modelos.Usuario(nome="Maria", email="maria@test.com")
     assert usuario.nome == "Maria"
     assert usuario.email == "maria@test.com"
-
-# arq aux
-
-from sqlmodel import Session, SQLModel
-from db.conexao import criar_engine
-from db import modelos
 
 def test_inserir_e_consultar_usuario_sqlmodel():
     # Cria engine em memória

@@ -1,8 +1,8 @@
 import pytest
 from datetime import date, timedelta
-from server import regras
-from configuracoes.excecoes import ErroDeRegraNegocio
-from testes.fixtures.conftest_unit import (
+from src.server import regras
+from src.configuracoes.excecoes import ErroDeRegraNegocio
+from tests.fixtures.conftest_unit import (
     usuario_sem_multa,
     usuario_com_multa,
     usuario_com_limite,
