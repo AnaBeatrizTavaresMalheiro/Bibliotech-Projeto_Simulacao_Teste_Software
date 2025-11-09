@@ -5,7 +5,7 @@ import uuid
 from fastapi.testclient import TestClient
 import pytest
 
-from db.criar_schemas import limpar_banco_via_api
+from src.db.criar_schemas import limpar_banco_via_api
 
 # =============================================================================
 # Helpers
