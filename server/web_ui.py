@@ -10,6 +10,8 @@ from configuracoes.excecoes import ErroDeRegraNegocio, ErroNaoEncontrado
 
 from sqlalchemy import select, text
 
+from fastapi.responses import HTMLResponse
+
 import json
 from pathlib import Path
 from datetime import datetime
@@ -25,11 +27,6 @@ templates = Jinja2Templates(directory="server/templates")
 
 router = APIRouter(prefix="/web")
 
-
-# Função helper para injetar a sessão
-def get_sessao():
-    with next(obter_sessao()) as sessao:
-        yield sessao
     
 # --- Home web
 @router.get("/", include_in_schema=False)
@@ -37,12 +34,39 @@ def web_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 # ------------------ USUÁRIOS ------------------
+# @router.get("/usuarios")
+# def web_list_usuarios(request: Request, q: str | None = None, sessao: Session = Depends(obter_sessao)):
+#     usuarios = sessao.exec(select(Usuario)).all() if hasattr(sessao, 'exec') else sessao.query(Usuario).all()
+#     if q:
+#         usuarios = [u for u in usuarios if q.lower() in u.nome.lower()]
+#     return templates.TemplateResponse("usuarios_list.html", {"request": request, "usuarios": usuarios})
+
+from sqlalchemy.orm import selectinload
+
 @router.get("/usuarios")
-def web_list_usuarios(request: Request, q: str | None = None, sessao: Session = Depends(get_sessao)):
-    usuarios = sessao.exec(select(Usuario)).all() if hasattr(sessao, 'exec') else sessao.query(Usuario).all()
+def web_list_usuarios(request: Request, q: str | None = None, sessao: Session = Depends(obter_sessao)):
+    resultado = sessao.exec(select(Usuario)) if hasattr(sessao, 'exec') else sessao.query(Usuario)
+    usuarios = [r[0] if not isinstance(r, Usuario) else r for r in resultado]
+
     if q:
         usuarios = [u for u in usuarios if q.lower() in u.nome.lower()]
-    return templates.TemplateResponse("usuarios_list.html", {"request": request, "usuarios": usuarios})
+
+    usuarios_dict = [
+        {
+            "id": u.id,
+            "nome": u.nome,
+            "email": u.email,
+            "qtd_emprestimo": u.qtd_emprestimo,
+            "possui_multa_aberta": u.possui_multa_aberta,
+        }
+        for u in usuarios
+    ]
+
+    return templates.TemplateResponse(
+        "usuarios_list.html",
+        {"request": request, "usuarios": usuarios_dict},
+    )
+
 
 
 @router.get("/usuarios/novo")
@@ -116,11 +140,34 @@ def web_usuario_deletar(request: Request, usuario_id: int):
 
 # ------------------ LIVROS ------------------
 @router.get("/livros")
-def web_list_livros(request: Request, q: str | None = None, sessao: Session = Depends(get_sessao)):
-    livros = sessao.exec(select(Livro)).all() if hasattr(sessao, 'exec') else sessao.query(Livro).all()
+# def web_list_livros(request: Request, q: str | None = None, sessao: Session = Depends(obter_sessao)):
+#     livros = sessao.exec(select(Livro)).all() if hasattr(sessao, 'exec') else sessao.query(Livro).all()
+#     if q:
+#         livros = [l for l in livros if q.lower() in l.titulo.lower()]
+#     return templates.TemplateResponse("livros_list.html", {"request": request, "livros": livros, "q": q})
+
+@router.get("/livros")
+def web_list_livros(request: Request, q: str | None = None, sessao: Session = Depends(obter_sessao)):
+    resultado = sessao.exec(select(Livro)) if hasattr(sessao, 'exec') else sessao.query(Livro)
+    livros = [r[0] if not isinstance(r, Livro) else r for r in resultado]
+
     if q:
         livros = [l for l in livros if q.lower() in l.titulo.lower()]
-    return templates.TemplateResponse("livros_list.html", {"request": request, "livros": livros, "q": q})
+
+    livros_dict = [
+        {
+            "id": l.id,
+            "titulo": l.titulo,
+            "isbn": l.isbn,
+            "disponivel": l.disponivel,
+        }
+        for l in livros
+    ]
+
+    return templates.TemplateResponse(
+        "livros_list.html",
+        {"request": request, "livros": livros_dict},
+    )
 
 
 @router.get("/livros/novo")
@@ -162,10 +209,39 @@ def web_livro_deletar(request: Request, livro_id: int):
     return RedirectResponse(url="/web/livros", status_code=HTTP_303_SEE_OTHER)
 
 # ------------------ EMPRÉSTIMOS ------------------
+# @router.get("/emprestimos")
+# def web_list_emprestimos(request: Request, sessao: Session = Depends(obter_sessao)):
+#     emprestimos = sessao.exec(select(Emprestimo)).all() if hasattr(sessao, 'exec') else sessao.query(Emprestimo).all()
+#     return templates.TemplateResponse("emprestimos_list.html", {"request": request, "emprestimos": emprestimos})
+
+
 @router.get("/emprestimos")
-def web_list_emprestimos(request: Request, sessao: Session = Depends(get_sessao)):
-    emprestimos = sessao.exec(select(Emprestimo)).all() if hasattr(sessao, 'exec') else sessao.query(Emprestimo).all()
-    return templates.TemplateResponse("emprestimos_list.html", {"request": request, "emprestimos": emprestimos})
+def web_list_emprestimos(request: Request, sessao: Session = Depends(obter_sessao)):
+    resultado = sessao.exec(
+        select(Emprestimo)
+        .options(selectinload(Emprestimo.usuario), selectinload(Emprestimo.livro))
+    ) if hasattr(sessao, 'exec') else sessao.query(Emprestimo)
+    emprestimos = [r[0] if not isinstance(r, Emprestimo) else r for r in resultado]
+
+    emprestimos_dict = [
+        {
+            "id": e.id,
+            "usuario": e.usuario.nome if e.usuario else "—",
+            "livro": e.livro.titulo if e.livro else "—",
+            "data_emprestimo": e.data_emprestimo.strftime("%d/%m/%Y") if e.data_emprestimo else "",
+            "data_devolucao_prevista": e.data_devolucao_prevista.strftime("%d/%m/%Y") if e.data_devolucao_prevista else "",
+            "data_devolucao_real": e.data_devolucao_real.strftime("%d/%m/%Y") if e.data_devolucao_real else "",
+            "dias_atraso": e.dias_atraso,
+            "valor_multa": f"R$ {e.valor_multa:.2f}",
+        }
+        for e in emprestimos
+    ]
+
+    return templates.TemplateResponse(
+        "emprestimos_list.html",
+        {"request": request, "emprestimos": emprestimos_dict},
+    )
+
 
 @router.get("/emprestimos/novo")
 def web_emprestimo_novo(request: Request):
@@ -357,3 +433,13 @@ def carregar_dados_json(sessao):
                         )
                         sessao.add(emprestimo)
         sessao.commit()
+
+
+@router.get("/forcar-carregar-json")
+def forcar_carregar_json(request: Request):
+    from server.web_ui import carregar_dados_json
+    from db.conexao import obter_sessao
+
+    sessao = next(obter_sessao())
+    carregar_dados_json(sessao)
+    return {"status": "✅ Dados JSON carregados no banco SQLite"}
