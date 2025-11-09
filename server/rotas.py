@@ -499,14 +499,23 @@ def criar_livro(payload: LivroIn, sessao: Session = Depends(obter_sessao)):
 
 
 @app_rotas.get("/livros", response_model=List[LivroOut])
-def listar_todos_os_livros(sessao: Session = Depends(obter_sessao)):
-    """
-    Retorna todos os livros cadastrados.
-    """
-    stmt = select(Livro).order_by(Livro.id)
-    livros = sessao.exec(stmt).all()
-    return livros
-
+def listar_todos_os_livros(
+    ordenar_por: str = Query(default="id", description="id|titulo|isbn|disponivel"),
+    ordem: str = Query(default="asc", description="asc|desc"),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    sessao: Session = Depends(obter_sessao),
+):
+    cols = {
+        "id": Livro.id,
+        "titulo": Livro.titulo,
+        "isbn": Livro.isbn,
+        "disponivel": Livro.disponivel,
+    }
+    coluna = cols.get(ordenar_por, Livro.id)
+    stmt = select(Livro).order_by(coluna.desc() if ordem.lower()=="desc" else coluna.asc())
+    stmt = stmt.offset(offset).limit(limit)
+    return sessao.exec(stmt).all()
 
 @app_rotas.patch("/livros/{livro_id}", response_model=LivroOut)
 def atualizar_livro(livro_id: int, payload: LivroUpdate, sessao: Session = Depends(obter_sessao)):

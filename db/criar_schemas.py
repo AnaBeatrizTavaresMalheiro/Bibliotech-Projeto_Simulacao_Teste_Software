@@ -200,6 +200,62 @@ class CriadorDeSchemasBiblioteca:
         for (nome,) in tabelas:
             print(" -", nome)
 
+    # ----------------------------------------------------------
+    # LIMPEZA / RESET
+    # ----------------------------------------------------------
+    def limpar_banco(self) -> None:
+        """
+        Apaga todo o conteúdo das tabelas e reseta autoincrement,
+        preservando o schema.
+        """
+        assert self.conexao, "Conexão não aberta. Use .abrir()."
+        cur = self.conexao.cursor()
+        cur.execute("BEGIN;")
+        try:
+            # Desabilita FK temporariamente para truncar sem ordem
+            cur.execute("PRAGMA foreign_keys = OFF;")
+
+            # Limpa tabelas conhecidas (mais seguro do que varrer sqlite_master)
+            cur.execute("DELETE FROM emprestimo;")
+            cur.execute("DELETE FROM usuario;")
+            cur.execute("DELETE FROM livro;")
+
+            # Reseta AUTOINCREMENT
+            cur.execute("DELETE FROM sqlite_sequence WHERE name IN ('emprestimo','usuario','livro');")
+
+            # Reabilita FK
+            cur.execute("PRAGMA foreign_keys = ON;")
+            self.conexao.commit()
+            print("[OK] Banco limpo: todas as tabelas truncadas.")
+        except Exception as e:
+            self.conexao.rollback()
+            print("[ERRO] Falha ao limpar banco:", e)
+            raise
+
+    def resetar_banco(self) -> None:
+        """
+        Reset “seguro” para Windows: em vez de apagar o arquivo (que pode estar em uso),
+        limpa todas as tabelas, reseta autoincrement e roda VACUUM.
+        Resultado final: banco vazio e compactado.
+        """
+        # Garante conexão aberta
+        if not self.conexao:
+            self.abrir()
+
+        # Limpa conteúdo
+        self.limpar_banco()
+
+        # Compacta/zera páginas órfãs
+        try:
+            self.conexao.execute("VACUUM;")
+            self.conexao.commit()
+            print("[OK] VACUUM executado (reset lógico concluído).")
+        except Exception as e:
+            # Se VACUUM falhar, o banco já está limpo; não precisa quebrar o fluxo.
+            print(f"[WARN] Falha no VACUUM (seguindo adiante): {e}")
+
+        print("[OK] Banco resetado (truncate + VACUUM).")
+
 
 # --- Funções de fachada para usar no FastAPI ---
 
@@ -221,9 +277,29 @@ def carregar_seed_se_vazio() -> None:
     apenas se as tabelas estiverem vazias.
     """
     ddl = CriadorDeSchemasBiblioteca()
-    ddl.abrir()
-    ddl.inserir_seed_se_vazio()
-    ddl.fechar()
+    try:
+        # garante que as tabelas existem antes de checar se estão vazias
+        ddl.abrir()
+        ddl.criar_tabelas()
+        ddl.criar_indices()
+        ddl.inserir_seed_se_vazio()
+    finally:
+        ddl.fechar()
+
+def limpar_banco_via_api() -> None:
+    ddl = CriadorDeSchemasBiblioteca()
+    try:
+        ddl.abrir()
+        ddl.limpar_banco()
+    finally:
+        ddl.fechar()
+
+def resetar_banco_via_api() -> None:
+    ddl = CriadorDeSchemasBiblioteca()
+    try:
+        ddl.resetar_banco()  # método de instância
+    finally:
+        ddl.fechar()
 
 
 
