@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Livros</h2>
+  <a href="/web/livros/novo">Novo livro</a>
+  <table>
+    <thead><tr><th>ID</th><th>Título</th><th>ISBN</th><th>Disp.</th><th>Ações</th></tr></thead>
+    <tbody>
+      {% for l in livros %}
+      <tr>
+        <td>{{ l.id }}</td>
+        <td>{{ l.titulo }}</td>
+        <td>{{ l.isbn }}</td>
+        <td>{{ 'SIM' if l.disponivel else 'NÃO' }}</td>
+        <td>
+          <form method="post" action="/web/livros/{{ l.id }}/deletar" style="display:inline">
+            <button type="submit">Deletar</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

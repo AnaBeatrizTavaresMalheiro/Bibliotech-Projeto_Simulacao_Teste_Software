@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{ title|default("Biblioteca") }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/web">Home</a> |
+    <a href="/web/usuarios">Gerenciar Usuários</a> |
+    <a href="/web/livros">Gerenciar Livros</a> |
+    <a href="/web/emprestimos">Gerenciar Empréstimos</a>
+  </nav>
+  <main>
+    {% if erro %}
+      <div class="erro">{{ erro }}</div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

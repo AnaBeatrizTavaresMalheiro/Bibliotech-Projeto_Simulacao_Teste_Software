@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Usuários</h2>
+  <a href="/web/usuarios/novo">Novo usuário</a>
+  <table>
+    <thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Qtd</th><th>Multa</th><th>Ações</th></tr></thead>
+    <tbody>
+      {% for u in usuarios %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.nome }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.qtd_emprestimo }}</td>
+        <td>{{ 'SIM' if u.possui_multa_aberta else 'NÃO' }}</td>
+        <td>
+          <a href="/web/usuarios/{{ u.id }}/editar">Editar</a>
+          <form method="post" action="/web/usuarios/{{ u.id }}/deletar" style="display:inline">
+            <button type="submit">Deletar</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
