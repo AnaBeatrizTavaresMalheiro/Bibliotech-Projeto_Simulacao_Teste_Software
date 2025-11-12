@@ -4,9 +4,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.status import HTTP_303_SEE_OTHER
 
-from db.conexao import obter_sessao
-from db.modelos import Usuario, Livro, Emprestimo
-from configuracoes.excecoes import ErroDeRegraNegocio, ErroNaoEncontrado
+from src.db.conexao import obter_sessao
+from src.db.modelos import Usuario, Livro, Emprestimo
+from src.configuracoes.excecoes import ErroDeRegraNegocio, ErroNaoEncontrado
 
 from sqlalchemy import select, text
 
@@ -15,14 +15,14 @@ from fastapi.responses import HTMLResponse
 import json
 from pathlib import Path
 from datetime import datetime
-from db.modelos import Usuario, Livro, Emprestimo
+from src.db.modelos import Usuario, Livro, Emprestimo
 
 from fastapi import Depends
 from sqlalchemy.orm import Session  # se estiver usando SQLAlchemy puro
-from db.conexao import obter_sessao
+from src.db.conexao import obter_sessao
 
 # templates & static
-templates = Jinja2Templates(directory="server/templates")
+templates = Jinja2Templates(directory="src/server/templates")
 # mount static - o main.py já incluiu o router; o app principal monta a pasta estática no main
 
 router = APIRouter(prefix="/web")
@@ -321,7 +321,7 @@ def carregar_dados_json(sessao):
     from pathlib import Path
     import json
     from datetime import datetime
-    from db.modelos import Usuario, Livro, Emprestimo
+    from src.db.modelos import Usuario, Livro, Emprestimo
     from sqlalchemy import select
 
     DATA_DIR = Path(__file__).parent.parent / "data"
@@ -437,8 +437,8 @@ def carregar_dados_json(sessao):
 
 @router.get("/forcar-carregar-json")
 def forcar_carregar_json(request: Request):
-    from server.web_ui import carregar_dados_json
-    from db.conexao import obter_sessao
+    from src.server.web_ui import carregar_dados_json
+    from src.db.conexao import obter_sessao
 
     sessao = next(obter_sessao())
     carregar_dados_json(sessao)

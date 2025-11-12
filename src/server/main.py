@@ -5,8 +5,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 from fastapi import FastAPI
 
 # Configurações e exceções
-from configuracoes.configuracoes import config
-from configuracoes.excecoes import (
+from src.configuracoes.configuracoes import config
+from src.configuracoes.excecoes import (
     ErroDeRegraNegocio,
     ErroNaoEncontrado,
     tratar_regra,
@@ -14,11 +14,11 @@ from configuracoes.excecoes import (
 )
 
 # Banco e rotas
-from db.inicializar import inicializar_banco
-from db.criar_schemas import carregar_seed_se_vazio
-from server.rotas import app_rotas
+from src.db.inicializar import inicializar_banco
+from src.db.criar_schemas import carregar_seed_se_vazio
+from src.server.rotas import app_rotas
 
-from server.web_ui import carregar_dados_json
+from src.server.web_ui import carregar_dados_json
 
 # Instância principal do FastAPI (com fallback de nome)
 app = FastAPI(title=getattr(config, "nome_app", "Biblioteca API"))
@@ -59,7 +59,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
 
-from db.conexao import obter_sessao
+from src.db.conexao import obter_sessao
 
 
 # Monta a pasta de arquivos estáticos
@@ -81,7 +81,7 @@ def startup():
 
 
 # 🔹 Importa e inclui as rotas web
-from server.web_ui import router as web_router
+from src.server.web_ui import router as web_router
 print("✅ Router WEB carregado:", web_router)
 app.include_router(web_router)
 print("✅ Router WEB incluído com prefixo:", web_router.prefix)

@@ -8,9 +8,9 @@ from typing import NoReturn
 
 from sqlmodel import Session, select
 
-from configuracoes.configuracoes import config
-from configuracoes.excecoes import ErroDeRegraNegocio
-from db.modelos import Livro, Usuario, Emprestimo
+from src.configuracoes.configuracoes import config
+from src.configuracoes.excecoes import ErroDeRegraNegocio
+from src.db.modelos import Livro, Usuario, Emprestimo
 
 
 def garantir_usuario_pode_emprestar(sessao: Session, usuario_id: int) -> None | NoReturn:

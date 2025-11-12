@@ -2,7 +2,7 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 import pytest
-from configuracoes.excecoes import ErroDeRegraNegocio, ErroNaoEncontrado
+from src.configuracoes.excecoes import ErroDeRegraNegocio, ErroNaoEncontrado
 
 # =========================================================
 # Testes básicos de string

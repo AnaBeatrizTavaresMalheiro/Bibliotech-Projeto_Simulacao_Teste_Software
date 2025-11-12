@@ -3,9 +3,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 import pytest
 from datetime import date, timedelta
-from server import regras
-from configuracoes.excecoes import ErroDeRegraNegocio
-from db.modelos import Usuario, Livro
+from src.server import regras
+from src.configuracoes.excecoes import ErroDeRegraNegocio
+from src.db.modelos import Usuario, Livro
 
 # ----------------------------
 # Sessão fake para testes sem banco real

@@ -1,8 +1,8 @@
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from server import regras
-from configuracoes.excecoes import ErroDeRegraNegocio
+from src.server import regras
+from src.configuracoes.excecoes import ErroDeRegraNegocio
 
 def test_validar_usuario_com_multa():
     usuario = {"possui_multa_aberta": True}

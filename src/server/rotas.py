@@ -405,10 +405,10 @@ from sqlmodel import Session, select, col
 from fastapi import Query, HTTPException
 
 
-from db.conexao import obter_sessao
-from db.modelos import Livro, Usuario, Emprestimo
-from server.regras import garantir_usuario_pode_emprestar, garantir_livro_disponivel, processar_devolucao
-from configuracoes.excecoes import ErroNaoEncontrado, ErroDeRegraNegocio
+from src.db.conexao import obter_sessao
+from src.db.modelos import Livro, Usuario, Emprestimo
+from src.server.regras import garantir_usuario_pode_emprestar, garantir_livro_disponivel, processar_devolucao
+from src.configuracoes.excecoes import ErroNaoEncontrado, ErroDeRegraNegocio
 
 app_rotas = APIRouter()
 

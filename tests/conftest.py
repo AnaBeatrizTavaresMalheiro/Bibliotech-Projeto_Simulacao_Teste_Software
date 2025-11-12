@@ -27,12 +27,13 @@
 #     }
 
 
-
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 # testes/fixtures/conftest.py
 import pytest
 from datetime import date, timedelta
 from fastapi.testclient import TestClient
-from server.main import app
+from src.server.main import app
 
 @pytest.fixture
 def client():
