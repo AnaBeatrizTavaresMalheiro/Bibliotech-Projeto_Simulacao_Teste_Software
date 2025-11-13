@@ -22,8 +22,14 @@ from sqlalchemy.orm import Session  # se estiver usando SQLAlchemy puro
 from src.db.conexao import obter_sessao
 
 # templates & static
-templates = Jinja2Templates(directory="src/server/templates")
+# templates = Jinja2Templates(directory="src/server/templates")
 # mount static - o main.py já incluiu o router; o app principal monta a pasta estática no main
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+TEMPLATES_DIR = ROOT_DIR / "server" / "templates"
+
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
 
 router = APIRouter(prefix="/web")
 

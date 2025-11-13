@@ -1,0 +1,19 @@
+[run]
+source = src
+omit =
+    src/server/web_ui.py
+    src/server/templates/*
+    */__init__.py
+
+[report]
+# Linhas que o relatório pode ignorar
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError
+
+# Mostrar porcentagem por arquivo no terminal
+show_missing = True
+
+[html]
+directory = coverage_html_report
