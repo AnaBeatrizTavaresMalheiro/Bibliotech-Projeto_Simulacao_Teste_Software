@@ -14,18 +14,42 @@
       <th>Email</th>
       <th>Qtd. Empréstimos</th>
       <th>Multa Aberta</th>
+      <th>Ações</th>
     </tr>
   </thead>
   <tbody>
     {% for usuario in usuarios %}
-    <tr>
-      <td>{{ usuario.id }}</td>
-      <td>{{ usuario.nome }}</td>
-      <td>{{ usuario.email }}</td>
-      <td>{{ usuario.qtd_emprestimo }}</td>
-      <td>{% if usuario.possui_multa_aberta %}Sim{% else %}Não{% endif %}</td>
-    </tr>
+        <tr>
+            <td>{{ usuario.id }}</td>
+            <td>{{ usuario.nome }}</td>
+            <td>{{ usuario.email }}</td>
+            <td>{{ usuario.qtd_emprestimo }}</td>
+            <td>
+                {% if usuario.possui_multa_aberta %}
+                    Sim
+                {% else %}
+                    Não
+                {% endif %}
+            </td>
+
+            <!-- NOVA COLUNA DE AÇÕES -->
+            <td>
+                <a href="/web/usuarios/{{ usuario.id }}/editar" style="padding:4px 8px; background-color:#007bff; color:white; text-decoration:none; border-radius:4px; margin-right:5px;" class="btn btn-primary">
+                    Editar
+                </a>
+
+                <form action="/web/usuarios/{{ usuario.id }}/deletar"
+                      method="post"
+                      style="display:inline;"
+                      onsubmit="return confirm('Tem certeza que deseja excluir este usuário?');">
+                    <button type="submit" style="padding:4px 8px; background-color:#dc3545; color:white; border:none; border-radius:4px; class="btn btn-danger">
+                        Excluir
+                    </button>
+                </form>
+            </td>
+        </tr>
     {% endfor %}
-  </tbody>
+</tbody>
+
 </table>
 {% endblock %}

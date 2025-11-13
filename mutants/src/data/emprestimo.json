@@ -1,0 +1,29 @@
+[
+  {
+    "usuario_id": 1,
+    "livro_id": 1,
+    "data_emprestimo": "2025-10-20",
+    "data_devolucao_prevista": "2025-11-03",
+    "data_devolucao_real": null,
+    "dias_atraso": 0,
+    "valor_multa": 0.0
+  },
+  {
+    "usuario_id": 2,
+    "livro_id": 2,
+    "data_emprestimo": "2025-10-22",
+    "data_devolucao_prevista": "2025-11-05",
+    "data_devolucao_real": null,
+    "dias_atraso": 0,
+    "valor_multa": 0.0
+  },
+  {
+    "usuario_id": 1,
+    "livro_id": 3,
+    "data_emprestimo": "2025-09-15",
+    "data_devolucao_prevista": "2025-09-29",
+    "data_devolucao_real": "2025-10-02",
+    "dias_atraso": 3,
+    "valor_multa": 4.5
+  }
+]

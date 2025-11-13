@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.status import HTTP_303_SEE_OTHER
+from datetime import date
 
 from src.db.conexao import obter_sessao
 from src.db.modelos import Usuario, Livro, Emprestimo
@@ -130,18 +131,74 @@ async def web_usuario_update(request: Request, usuario_id: int):
     except ErroDeRegraNegocio as e:
         return templates.TemplateResponse("usuario_form.html", {"request": request, "usuario": usuario, "erro": str(e)})
 
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+
 @router.post("/usuarios/{usuario_id}/deletar")
-def web_usuario_deletar(request: Request, usuario_id: int):
-    sessao = next(obter_sessao())
+def web_usuario_deletar(
+    request: Request,
+    usuario_id: int,
+    sessao: Session = Depends(obter_sessao),
+):
     usuario = sessao.get(Usuario, usuario_id)
     if not usuario:
-        return templates.TemplateResponse("404.html", {"request": request, "mensagem": "Usuário não encontrado"}, status_code=404)
-    # regra: não deletar se tiver emprestimos ativos
-    emprestimo_ativo = sessao.exec(select(Emprestimo).where(Emprestimo.usuario_id == usuario_id, Emprestimo.data_devolucao_real.is_(None))).first() if hasattr(sessao, 'exec') else None
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "mensagem": "Usuário não encontrado"},
+            status_code=404,
+        )
+
+    # Busca TODOS os empréstimos desse usuário
+    if hasattr(sessao, "exec"):
+        resultado = sessao.exec(
+            select(Emprestimo).where(Emprestimo.usuario_id == usuario_id)
+        )
+        emprestimos = [r[0] if not isinstance(r, Emprestimo) else r for r in resultado]
+    else:
+        emprestimos = (
+            sessao.query(Emprestimo)
+            .filter(Emprestimo.usuario_id == usuario_id)
+            .all()
+        )
+
+    emprestimo_ativo = any(e.data_devolucao_real is None for e in emprestimos)
+
     if emprestimo_ativo:
-        return templates.TemplateResponse("usuarios_list.html", {"request": request, "usuarios": sessao.exec(select(Usuario)).all() if hasattr(sessao, 'exec') else sessao.query(Usuario).all(), "erro": "Usuário possui empréstimo ativo"})
+        # recarrega lista de usuários no mesmo formato da /web/usuarios
+        if hasattr(sessao, "exec"):
+            resultado_u = sessao.exec(select(Usuario))
+            usuarios = [r[0] if not isinstance(r, Usuario) else r for r in resultado_u]
+        else:
+            usuarios = sessao.query(Usuario).all()
+
+        usuarios_dict = [
+            {
+                "id": u.id,
+                "nome": u.nome,
+                "email": u.email,
+                "qtd_emprestimo": u.qtd_emprestimo,
+                "possui_multa_aberta": u.possui_multa_aberta,
+            }
+            for u in usuarios
+        ]
+
+        return templates.TemplateResponse(
+            "usuarios_list.html",
+            {
+                "request": request,
+                "usuarios": usuarios_dict,
+                "erro": "Usuário possui empréstimo ativo e não pode ser excluído.",
+            },
+        )
+
+    # Se só tem empréstimos devolvidos, podemos excluí-los e depois excluir o usuário
+    for e in emprestimos:
+        sessao.delete(e)
+
     sessao.delete(usuario)
     sessao.commit()
+
     return RedirectResponse(url="/web/usuarios", status_code=HTTP_303_SEE_OTHER)
 
 # ------------------ LIVROS ------------------
@@ -201,18 +258,153 @@ async def web_livro_criar(request: Request):
         return templates.TemplateResponse("livro_form.html", {"request": request, "livro": {"titulo": titulo, "isbn": isbn}, "erro": str(e)})
 
 @router.post("/livros/{livro_id}/deletar")
-def web_livro_deletar(request: Request, livro_id: int):
+def web_livro_deletar(
+    request: Request,
+    livro_id: int,
+    sessao: Session = Depends(obter_sessao),
+):
+    livro = sessao.get(Livro, livro_id)
+    if not livro:
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "mensagem": "Livro não encontrado"},
+            status_code=404,
+        )
+
+    # Busca TODOS os empréstimos desse livro
+    if hasattr(sessao, "exec"):
+        resultado = sessao.exec(
+            select(Emprestimo).where(Emprestimo.livro_id == livro_id)
+        )
+        emprestimos = [r[0] if not isinstance(r, Emprestimo) else r for r in resultado]
+    else:
+        emprestimos = (
+            sessao.query(Emprestimo)
+            .filter(Emprestimo.livro_id == livro_id)
+            .all()
+        )
+
+    # Verifica se existe algum empréstimo ATIVO
+    emprestimo_ativo = any(e.data_devolucao_real is None for e in emprestimos)
+
+    if emprestimo_ativo:
+        # recarrega lista de livros no mesmo formato da /web/livros
+        if hasattr(sessao, "exec"):
+            resultado_l = sessao.exec(select(Livro))
+            livros = [r[0] if not isinstance(r, Livro) else r for r in resultado_l]
+        else:
+            livros = sessao.query(Livro).all()
+
+        livros_dict = [
+            {
+                "id": l.id,
+                "titulo": l.titulo,
+                "isbn": l.isbn,
+                "disponivel": l.disponivel,
+            }
+            for l in livros
+        ]
+
+        return templates.TemplateResponse(
+            "livros_list.html",
+            {
+                "request": request,
+                "livros": livros_dict,
+                "erro": "Livro possui empréstimo ativo e não pode ser excluído.",
+            },
+        )
+
+    # Se chegou aqui: não há empréstimo ativo.
+    # Podemos apagar os empréstimos históricos (devolvidos) e depois o livro.
+    for e in emprestimos:
+        sessao.delete(e)
+
+    sessao.delete(livro)
+    sessao.commit()
+
+    return RedirectResponse(url="/web/livros", status_code=HTTP_303_SEE_OTHER)
+
+
+
+@router.get("/livros/{livro_id}/editar")
+def web_livro_editar(request: Request, livro_id: int):
     sessao = next(obter_sessao())
     livro = sessao.get(Livro, livro_id)
     if not livro:
-        return templates.TemplateResponse("404.html", {"request": request, "mensagem": "Livro não encontrado"}, status_code=404)
-    # regra: não deletar se existir empréstimo ativo
-    emprestimo_ativo = sessao.exec(select(Emprestimo).where(Emprestimo.livro_id == livro_id, Emprestimo.data_devolucao_real.is_(None))).first() if hasattr(sessao, 'exec') else None
-    if emprestimo_ativo:
-        return templates.TemplateResponse("livros_list.html", {"request": request, "livros": sessao.exec(select(Livro)).all() if hasattr(sessao, 'exec') else sessao.query(Livro).all(), "erro": "Livro possui empréstimo ativo"})
-    sessao.delete(livro)
-    sessao.commit()
-    return RedirectResponse(url="/web/livros", status_code=HTTP_303_SEE_OTHER)
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "mensagem": "Livro não encontrado"},
+            status_code=404,
+        )
+
+    return templates.TemplateResponse(
+        "livro_form.html",
+        {
+            "request": request,
+            "livro": livro,
+        },
+    )
+
+
+@router.post("/livros/{livro_id}/editar")
+async def web_livro_update(request: Request, livro_id: int):
+    form = await request.form()
+    titulo = form.get("titulo", "").strip()
+    isbn = form.get("isbn", "").strip()
+
+    sessao = next(obter_sessao())
+    livro = sessao.get(Livro, livro_id)
+
+    if not livro:
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "mensagem": "Livro não encontrado"},
+            status_code=404,
+        )
+
+    try:
+        # validação básica
+        if not titulo or not isbn:
+            raise ErroDeRegraNegocio("Título e ISBN obrigatórios")
+
+        # checa duplicidade de ISBN em OUTRO livro
+        if hasattr(sessao, "exec"):
+            existente = sessao.exec(
+                select(Livro).where(
+                    Livro.isbn == isbn,
+                    Livro.id != livro_id,
+                )
+            ).first()
+        else:
+            existente = (
+                sessao.query(Livro)
+                .filter(Livro.isbn == isbn, Livro.id != livro_id)
+                .first()
+            )
+
+        if existente:
+            raise ErroDeRegraNegocio("ISBN já cadastrado em outro livro")
+
+        # aplica alterações
+        livro.titulo = titulo
+        livro.isbn = isbn
+
+        sessao.add(livro)
+        sessao.commit()
+        sessao.refresh(livro)
+
+        return RedirectResponse(url="/web/livros", status_code=HTTP_303_SEE_OTHER)
+
+    except ErroDeRegraNegocio as e:
+        # volta pro form mantendo o livro e mostrando erro
+        return templates.TemplateResponse(
+            "livro_form.html",
+            {
+                "request": request,
+                "livro": livro,
+                "erro": str(e),
+            },
+        )
 
 # ------------------ EMPRÉSTIMOS ------------------
 # @router.get("/emprestimos")
@@ -223,38 +415,55 @@ def web_livro_deletar(request: Request, livro_id: int):
 
 @router.get("/emprestimos")
 def web_list_emprestimos(request: Request, sessao: Session = Depends(obter_sessao)):
-    resultado = sessao.exec(
-        select(Emprestimo)
-        .options(selectinload(Emprestimo.usuario), selectinload(Emprestimo.livro))
-    ) if hasattr(sessao, 'exec') else sessao.query(Emprestimo)
-    emprestimos = [r[0] if not isinstance(r, Emprestimo) else r for r in resultado]
-
-    emprestimos_dict = [
-        {
-            "id": e.id,
-            "usuario": e.usuario.nome if e.usuario else "—",
-            "livro": e.livro.titulo if e.livro else "—",
-            "data_emprestimo": e.data_emprestimo.strftime("%d/%m/%Y") if e.data_emprestimo else "",
-            "data_devolucao_prevista": e.data_devolucao_prevista.strftime("%d/%m/%Y") if e.data_devolucao_prevista else "",
-            "data_devolucao_real": e.data_devolucao_real.strftime("%d/%m/%Y") if e.data_devolucao_real else "",
-            "dias_atraso": e.dias_atraso,
-            "valor_multa": f"R$ {e.valor_multa:.2f}",
-        }
-        for e in emprestimos
-    ]
+    if hasattr(sessao, "exec"):  # SQLModel
+        resultado = sessao.exec(
+            select(Emprestimo)
+            .options(
+                selectinload(Emprestimo.usuario),
+                selectinload(Emprestimo.livro),
+            )
+        )
+        emprestimos = resultado.scalars().all()
+    else:  # SQLAlchemy
+        emprestimos = (
+            sessao.query(Emprestimo)
+            .options(
+                selectinload(Emprestimo.usuario),
+                selectinload(Emprestimo.livro),
+            )
+            .all()
+        )
 
     return templates.TemplateResponse(
         "emprestimos_list.html",
-        {"request": request, "emprestimos": emprestimos_dict},
+        {"request": request, "emprestimos": emprestimos},
     )
 
 
+
 @router.get("/emprestimos/novo")
-def web_emprestimo_novo(request: Request):
-    sessao = next(obter_sessao())
-    usuarios = sessao.exec(select(Usuario)).all() if hasattr(sessao, 'exec') else sessao.query(Usuario).all()
-    livros = sessao.exec(select(Livro).where(Livro.disponivel == True)).all() if hasattr(sessao, 'exec') else sessao.query(Livro).filter_by(disponivel=True).all()
-    return templates.TemplateResponse("emprestimo_form.html", {"request": request, "usuarios": usuarios, "livros": livros})
+def web_emprestimo_novo(request: Request, sessao: Session = Depends(obter_sessao)):
+    # Usuários
+    resultado_u = sessao.exec(select(Usuario)) if hasattr(sessao, 'exec') else sessao.query(Usuario)
+    usuarios = [r[0] if not isinstance(r, Usuario) else r for r in resultado_u]
+
+    # Livros disponíveis
+    resultado_l = (
+        sessao.exec(select(Livro).where(Livro.disponivel == True))
+        if hasattr(sessao, 'exec')
+        else sessao.query(Livro).filter_by(disponivel=True)
+    )
+    livros = [r[0] if not isinstance(r, Livro) else r for r in resultado_l]
+
+    return templates.TemplateResponse(
+        "emprestimo_form.html",
+        {
+            "request": request,
+            "usuarios": usuarios,
+            "livros": livros,
+            "erro": None,
+        },
+    )
 
 @router.post("/emprestimos/novo")
 async def web_emprestimo_criar(request: Request):
@@ -267,51 +476,123 @@ async def web_emprestimo_criar(request: Request):
         livro = sessao.get(Livro, livro_id)
         if not usuario or not livro:
             raise ErroNaoEncontrado("Usuário ou livro não encontrado")
+
+        # ✅ Regra 1: usuário com multa aberta não pode pegar
         if usuario.possui_multa_aberta:
             raise ErroDeRegraNegocio("Usuário com multa aberta")
+
+        # ✅ Regra 2: máximo 3 empréstimos ativos
+        # usando qtd_emprestimo que você já mantém nas devoluções
+        if usuario.qtd_emprestimo >= 3:
+            raise ErroDeRegraNegocio("Usuário já possui 3 empréstimos ativos")
+
+        # ✅ Regra 3: livro precisa estar disponível
         if not livro.disponivel:
             raise ErroDeRegraNegocio("Livro indisponível")
+
         # cria emprestimo
         from datetime import date, timedelta
-        emprestimo = Emprestimo(livro_id=livro_id, usuario_id=usuario_id, data_emprestimo=date.today(), data_devolucao_prevista=date.today() + timedelta(days=7))
+        emprestimo = Emprestimo(
+            livro_id=livro_id,
+            usuario_id=usuario_id,
+            data_emprestimo=date.today(),
+            data_devolucao_prevista=date.today() + timedelta(days=7),
+        )
         sessao.add(emprestimo)
+
+        # atualiza estado do livro e do usuário
         livro.disponivel = False
         usuario.qtd_emprestimo += 1
         sessao.add(livro)
         sessao.add(usuario)
+
         sessao.commit()
         sessao.refresh(emprestimo)
         return RedirectResponse(url="/web/emprestimos", status_code=HTTP_303_SEE_OTHER)
+
     except (ErroDeRegraNegocio, ErroNaoEncontrado) as e:
-        usuarios = sessao.exec(select(Usuario)).all() if hasattr(sessao, 'exec') else sessao.query(Usuario).all()
-        livros = sessao.exec(select(Livro).where(Livro.disponivel == True)).all() if hasattr(sessao, 'exec') else sessao.query(Livro).filter_by(disponivel=True).all()
-        return templates.TemplateResponse("emprestimo_form.html", {"request": request, "usuarios": usuarios, "livros": livros, "erro": str(e)})
+        # recarrega listas para o form, no mesmo formato do GET /emprestimos/novo
+        if hasattr(sessao, "exec"):
+            # usuarios
+            resultado_u = sessao.exec(select(Usuario))
+            usuarios = [r[0] if not isinstance(r, Usuario) else r for r in resultado_u]
+            # livros disponíveis
+            resultado_l = sessao.exec(
+                select(Livro).where(Livro.disponivel == True)
+            )
+            livros = [r[0] if not isinstance(r, Livro) else r for r in resultado_l]
+        else:
+            usuarios = sessao.query(Usuario).all()
+            livros = sessao.query(Livro).filter_by(disponivel=True).all()
+
+        return templates.TemplateResponse(
+            "emprestimo_form.html",
+            {
+                "request": request,
+                "usuarios": usuarios,
+                "livros": livros,
+                "erro": str(e),
+            },
+        )
 
 @router.post("/emprestimos/{emprestimo_id}/devolver")
 def web_emprestimo_devolver(request: Request, emprestimo_id: int):
     sessao = next(obter_sessao())
     emprestimo = sessao.get(Emprestimo, emprestimo_id)
     if not emprestimo:
-        return templates.TemplateResponse("404.html", {"request": request, "mensagem": "Empréstimo não encontrado"}, status_code=404)
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "mensagem": "Empréstimo não encontrado"},
+            status_code=404,
+        )
+
     if emprestimo.data_devolucao_real:
-        return templates.TemplateResponse("emprestimos_list.html", {"request": request, "emprestimos": sessao.exec(select(Emprestimo)).all() if hasattr(sessao, 'exec') else sessao.query(Emprestimo).all(), "erro": "Empréstimo já devolvido"})
-    from datetime import date
-    emprestimo.data_devolucao_real = date.today()
-    # calcula dias atraso e multa (exemplo)
-    if emprestimo.data_devolucao_prevista and emprestimo.data_devolucao_real > emprestimo.data_devolucao_prevista:
-        dias = (emprestimo.data_devolucao_real - emprestimo.data_devolucao_prevista).days
-        emprestimo.dias_atraso = dias
-        emprestimo.valor_multa = (dias * 1.5)  # usa config se desejar
+        # já devolvido
+        emprestimos = (
+            sessao.exec(select(Emprestimo)).all()
+            if hasattr(sessao, "exec")
+            else sessao.query(Emprestimo).all()
+        )
+        return templates.TemplateResponse(
+            "emprestimos_list.html",
+            {
+                "request": request,
+                "emprestimos": emprestimos,
+                "erro": "Empréstimo já devolvido",
+            },
+        )
+
+    # 1) define data de devolução real (hoje)
+    hoje = date.today()
+    emprestimo.data_devolucao_real = hoje
+
+    # 2) calcula atraso em dias (nunca negativo)
+    dias_atraso = 0
+    valor_multa = 0.0
+
+    if emprestimo.data_devolucao_prevista:
+        diff = (hoje - emprestimo.data_devolucao_prevista).days
+        dias_atraso = max(diff, 0)
+        valor_multa = dias_atraso * 1.5  # regra de multa
+
+    emprestimo.dias_atraso = dias_atraso
+    emprestimo.valor_multa = valor_multa
+
+    # 3) atualiza livro e usuário
     livro = sessao.get(Livro, emprestimo.livro_id)
     usuario = sessao.get(Usuario, emprestimo.usuario_id)
+
     livro.disponivel = True
     usuario.qtd_emprestimo = max(0, usuario.qtd_emprestimo - 1)
-    if emprestimo.valor_multa > 0:
+
+    if valor_multa > 0:
         usuario.possui_multa_aberta = True
+
     sessao.add(livro)
     sessao.add(usuario)
     sessao.add(emprestimo)
     sessao.commit()
+
     return RedirectResponse(url="/web/emprestimos", status_code=HTTP_303_SEE_OTHER)
 
 

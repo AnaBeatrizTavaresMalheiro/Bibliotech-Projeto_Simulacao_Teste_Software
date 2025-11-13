@@ -1,0 +1,4 @@
+[tool.mutmut]
+paths_to_mutate = ["src"]
+runner = "pytest -q"
+tests_dir = "tests"
