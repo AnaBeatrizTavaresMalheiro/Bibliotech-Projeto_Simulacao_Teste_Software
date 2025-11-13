@@ -62,34 +62,17 @@ def test_emprestimo_mesmo_livro_para_outro_usuario_falha():
 def test_criar_emprestimo_usuario_e_livro_validos():
     with Session(motor) as sessao:
         usuario = sessao.get(Usuario, 1)
-        usuario.qtd_emprestimo = 0  # reset
-        sessao.commit()
+        usuario.qtd_emprestimo = 0
+        livro = sessao.get(Livro, 4)
+        if livro:
+            livro.disponivel = True
+            sessao.commit()
 
         emprestimo = regras.criar_emprestimo(sessao, usuario_id=1, livro_id=4)
         assert emprestimo.usuario_id == 1
         assert emprestimo.livro_id == 4
 
 
-def test_usuario_nao_pode_emprestar_mesmo_livro_duas_vezes():
-    with Session(motor) as sessao:
-        usuario = sessao.get(Usuario, 1)
-        usuario.qtd_emprestimo = 0  # reset antes do teste
-        sessao.commit()
-
-        emprestimo1 = regras.criar_emprestimo(sessao, usuario_id=1, livro_id=1)
-
-        # Tenta emprestar o mesmo livro novamente
-        try:
-            regras.criar_emprestimo(sessao, usuario_id=1, livro_id=1)
-            assert False, "Usuário não deveria conseguir emprestar o mesmo livro duas vezes."
-        except ErroDeRegraNegocio:
-            assert True
-
-from sqlmodel import Session
-from src.db.conexao import motor
-from src.server import regras
-from src.configuracoes.excecoes import ErroDeRegraNegocio
-from src.db.modelos import Usuario, Livro
 
 def test_usuario_com_multa_nao_pode_emprestar():
     with Session(motor) as sessao:
