@@ -1,0 +1,60 @@
+from datetime import date
+from sqlmodel import Session, select
+from src.db.conexao import motor
+from src.server import regras
+from src.configuracoes.excecoes import ErroDeRegraNegocio
+from src.db.modelos import Usuario, Livro, Emprestimo
+
+def test_criar_emprestimo_usuario_e_livro_validos():
+    with Session(motor) as sessao:
+        # Usuário João (id=1), Livro "O Alienista" (id=4)
+        emprestimo = regras.criar_emprestimo(sessao, usuario_id=1, livro_id=4)
+        assert emprestimo.usuario_id == 1
+        assert emprestimo.livro_id == 4
+
+def test_emprestimo_usuario_inexistente():
+    with Session(motor) as sessao:
+        try:
+            regras.criar_emprestimo(sessao, usuario_id=999, livro_id=1)
+            assert False, "Deveria falhar com ErroDeRegraNegocio"
+        except ErroDeRegraNegocio:
+            assert True
+
+def test_emprestimo_livro_inexistente():
+    with Session(motor) as sessao:
+        try:
+            regras.criar_emprestimo(sessao, usuario_id=1, livro_id=999)
+            assert False
+        except ErroDeRegraNegocio:
+            assert True
+
+def test_emprestimo_livro_indisponivel():
+    with Session(motor) as sessao:
+        livro = sessao.get(Livro, 5)
+        livro.disponivel = False
+        sessao.commit()
+        try:
+            regras.criar_emprestimo(sessao, usuario_id=2, livro_id=5)
+            assert False
+        except ErroDeRegraNegocio:
+            assert True
+        finally:
+            livro.disponivel = True
+            sessao.commit()
+
+
+def test_emprestimo_mesmo_livro_para_outro_usuario_falha():
+    """Não deve permitir emprestar um livro já emprestado a outro usuário."""
+    with Session(motor) as sessao:
+        livro = sessao.get(Livro, 3)
+        livro.disponivel = False
+        sessao.commit()
+
+        try:
+            regras.criar_emprestimo(sessao, usuario_id=2, livro_id=3)
+            assert False, "Deveria falhar pois o livro está indisponível"
+        except ErroDeRegraNegocio:
+            assert True
+        finally:
+            livro.disponivel = True
+            sessao.commit()
