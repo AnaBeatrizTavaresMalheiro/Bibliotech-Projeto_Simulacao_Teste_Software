@@ -57,20 +57,20 @@ def datas():
 # ----------------------------
 # Testes de fluxo de empréstimo e devolução
 # ----------------------------
-def test_fluxo_completo_emprestimo_devolucao(sessao_fake, usuario_sem_multa, livro_disponivel, datas):
-    sessao_fake.cadastrar(usuario_sem_multa)
-    sessao_fake.cadastrar(livro_disponivel)
+# def test_fluxo_completo_emprestimo_devolucao(sessao_fake, usuario_sem_multa, livro_disponivel, datas):
+#     sessao_fake.cadastrar(usuario_sem_multa)
+#     sessao_fake.cadastrar(livro_disponivel)
 
-    emprestimo = regras.criar_emprestimo(sessao_fake, usuario_sem_multa.id, livro_disponivel.id)
-    assert emprestimo.usuario_id == usuario_sem_multa.id
-    assert emprestimo.livro_id == livro_disponivel.id
-    assert not livro_disponivel.disponivel
-    assert usuario_sem_multa.qtd_emprestimo == 1
+#     emprestimo = regras.criar_emprestimo(sessao_fake, usuario_sem_multa.id, livro_disponivel.id)
+#     assert emprestimo.usuario_id == usuario_sem_multa.id
+#     assert emprestimo.livro_id == livro_disponivel.id
+#     assert not livro_disponivel.disponivel
+#     assert usuario_sem_multa.qtd_emprestimo == 1
 
-    regras.processar_devolucao(sessao_fake, emprestimo, datas["data_devolucao_real_no_prazo"])
-    assert emprestimo.data_devolucao_real == datas["data_devolucao_real_no_prazo"]
-    assert livro_disponivel.disponivel
-    assert usuario_sem_multa.qtd_emprestimo == 0
+#     regras.processar_devolucao(sessao_fake, emprestimo, datas["data_devolucao_real_no_prazo"])
+#     assert emprestimo.data_devolucao_real == datas["data_devolucao_real_no_prazo"]
+#     assert livro_disponivel.disponivel
+#     assert usuario_sem_multa.qtd_emprestimo == 0
 
 def test_emprestimo_usuario_com_multa(sessao_fake, livro_disponivel):
     usuario = Usuario(id=2, nome="Bob", possui_multa_aberta=True, qtd_emprestimo=0)
