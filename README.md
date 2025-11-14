@@ -58,6 +58,39 @@ pytest --cov=src --cov-branch --cov-report=term-missing
 
 ---
 
+### 📁 Estrutura do Projeto
+
+```bash
+.
+├── docs/                     # Documentação do projeto
+├── src/                      # Código-fonte principal
+│   ├── configuracoes/        # Arquivos de configuração
+│   ├── data/                 # Dados auxiliares
+│   ├── db/                   # Inicialização e arquivos do banco de dados
+│   └── server/               # Servidor FastAPI
+│       ├── static/           # Arquivos estáticos (CSS/JS)
+│       ├── templates/        # Templates HTML (Jinja2)
+│       ├── main.py           # Ponto de entrada da API
+│       ├── regras.py         # Regras de negócio
+│       ├── rotas.py          # Rotas/endpoints da API
+│       └── web_ui.py         # Renderização da interface web
+│
+├── tests/                    # Testes automatizados
+│   ├── fixtures/             # Fixtures para os testes
+│   ├── functional/           # Testes funcionais
+│   ├── integration/          # Testes de integração
+    ├── mutation/             # Testes de mutação
+│   └── unit/                 # Testes unitários
+│
+├── biblioteca.db             # Banco de dados SQLite
+├── pytest.ini                # Configuração do Pytest
+├── .mutmut.ini               # Configuração do Mutmut
+├── .coveragerc               # Configuração da cobertura de testes
+└── README.md                 # Documentação principal do projeto
+```
+
+---
+
 ### ✨ Funcionalidades do Sistema
 
 ✅ API REST completa
