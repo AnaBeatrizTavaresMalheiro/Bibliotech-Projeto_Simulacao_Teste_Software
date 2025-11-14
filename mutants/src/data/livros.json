@@ -1,7 +1,0 @@
-[
-  { "titulo": "1984", "isbn": "9780451524935", "disponivel": true },
-  { "titulo": "Fahrenheit 451", "isbn": "9781451673319", "disponivel": true },
-  { "titulo": "Dom Casmurro", "isbn": "9788520935201", "disponivel": true },
-  { "titulo": "O Alienista", "isbn": "9788520935515", "disponivel": true },
-  { "titulo": "Capitães da Areia", "isbn": "9788520927251", "disponivel": true }
-]

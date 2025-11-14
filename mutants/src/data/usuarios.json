@@ -1,6 +1,0 @@
-[
-  { "nome": "João Silva", "email": "joao.silva@example.com", "qtd_emprestimo": 1, "possui_multa_aberta": false },
-  { "nome": "Maria Souza", "email": "maria.souza@example.com", "qtd_emprestimo": 1, "possui_multa_aberta": false },
-  { "nome": "Carlos Mendes", "email": "carlos.mendes@example.com", "qtd_emprestimo": 1, "possui_multa_aberta": false },
-  { "nome": "Fernanda Lima", "email": "fernanda.lima@example.com", "qtd_emprestimo": 0, "possui_multa_aberta": false }
-]

@@ -22,10 +22,6 @@ from fastapi import Depends
 from sqlalchemy.orm import Session  # se estiver usando SQLAlchemy puro
 from src.db.conexao import obter_sessao
 
-# templates & static
-# templates = Jinja2Templates(directory="src/server/templates")
-# mount static - o main.py já incluiu o router; o app principal monta a pasta estática no main
-
 ROOT_DIR = Path(__file__).resolve().parents[1]
 TEMPLATES_DIR = ROOT_DIR / "server" / "templates"
 
@@ -41,12 +37,6 @@ def web_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 # ------------------ USUÁRIOS ------------------
-# @router.get("/usuarios")
-# def web_list_usuarios(request: Request, q: str | None = None, sessao: Session = Depends(obter_sessao)):
-#     usuarios = sessao.exec(select(Usuario)).all() if hasattr(sessao, 'exec') else sessao.query(Usuario).all()
-#     if q:
-#         usuarios = [u for u in usuarios if q.lower() in u.nome.lower()]
-#     return templates.TemplateResponse("usuarios_list.html", {"request": request, "usuarios": usuarios})
 
 from sqlalchemy.orm import selectinload
 
@@ -202,12 +192,6 @@ def web_usuario_deletar(
     return RedirectResponse(url="/web/usuarios", status_code=HTTP_303_SEE_OTHER)
 
 # ------------------ LIVROS ------------------
-@router.get("/livros")
-# def web_list_livros(request: Request, q: str | None = None, sessao: Session = Depends(obter_sessao)):
-#     livros = sessao.exec(select(Livro)).all() if hasattr(sessao, 'exec') else sessao.query(Livro).all()
-#     if q:
-#         livros = [l for l in livros if q.lower() in l.titulo.lower()]
-#     return templates.TemplateResponse("livros_list.html", {"request": request, "livros": livros, "q": q})
 
 @router.get("/livros")
 def web_list_livros(request: Request, q: str | None = None, sessao: Session = Depends(obter_sessao)):
@@ -407,12 +391,6 @@ async def web_livro_update(request: Request, livro_id: int):
         )
 
 # ------------------ EMPRÉSTIMOS ------------------
-# @router.get("/emprestimos")
-# def web_list_emprestimos(request: Request, sessao: Session = Depends(obter_sessao)):
-#     emprestimos = sessao.exec(select(Emprestimo)).all() if hasattr(sessao, 'exec') else sessao.query(Emprestimo).all()
-#     return templates.TemplateResponse("emprestimos_list.html", {"request": request, "emprestimos": emprestimos})
-
-
 @router.get("/emprestimos")
 def web_list_emprestimos(request: Request, sessao: Session = Depends(obter_sessao)):
     if hasattr(sessao, "exec"):  # SQLModel
@@ -477,16 +455,16 @@ async def web_emprestimo_criar(request: Request):
         if not usuario or not livro:
             raise ErroNaoEncontrado("Usuário ou livro não encontrado")
 
-        # ✅ Regra 1: usuário com multa aberta não pode pegar
+        # Regra 1: usuário com multa aberta não pode pegar
         if usuario.possui_multa_aberta:
             raise ErroDeRegraNegocio("Usuário com multa aberta")
 
-        # ✅ Regra 2: máximo 3 empréstimos ativos
+        # Regra 2: máximo 3 empréstimos ativos
         # usando qtd_emprestimo que você já mantém nas devoluções
         if usuario.qtd_emprestimo >= 3:
             raise ErroDeRegraNegocio("Usuário já possui 3 empréstimos ativos")
 
-        # ✅ Regra 3: livro precisa estar disponível
+        # Regra 3: livro precisa estar disponível
         if not livro.disponivel:
             raise ErroDeRegraNegocio("Livro indisponível")
 
@@ -729,4 +707,4 @@ def forcar_carregar_json(request: Request):
 
     sessao = next(obter_sessao())
     carregar_dados_json(sessao)
-    return {"status": "✅ Dados JSON carregados no banco SQLite"}
+    return {"status": "Dados JSON carregados no banco SQLite"}

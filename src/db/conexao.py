@@ -2,10 +2,6 @@
 from pathlib import Path
 from sqlmodel import create_engine, Session
 
-# >>> MESMO cálculo de caminho do criar_schemas.py <<<
-# ROOT_DIR = Path(__file__).resolve().parents[1]
-# DB_PATH = ROOT_DIR / "biblioteca.db"   # único ponto de verdade
-
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DB_PATH = ROOT_DIR / "data" / "biblioteca.db"
 

@@ -1,7 +1,7 @@
 # testes/fixtures/conftest_integration.py
 
 import os
-os.environ["TESTING"] = "1"  # ⚡️ Deve vir antes de importar o app
+os.environ["TESTING"] = "1"  #
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -10,12 +10,12 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import SQLModel, create_engine, Session
 
-from server.main import app
-from db import modelos
-from server.rotas import obter_sessao as rotas_get_sessao
+from src.server.main import app
+from src.db import modelos
+from src.server.rotas import obter_sessao as rotas_get_sessao
 
 # --------------------------------------------------------
-# 🔹 Engine em memória e sessão para testes
+# Engine em memória e sessão para testes
 # --------------------------------------------------------
 @pytest.fixture(scope="function")
 def engine():
@@ -31,7 +31,7 @@ def session(engine):
         yield s
 
 # --------------------------------------------------------
-# 🔹 TestClient com dependência de sessão sobrescrita
+# TestClient com dependência de sessão sobrescrita
 # --------------------------------------------------------
 @pytest.fixture(scope="function")
 def client(engine):
@@ -53,7 +53,7 @@ def client(engine):
     app.dependency_overrides.clear()
 
 # --------------------------------------------------------
-# 🔹 Acesso direto à sessão do client (para helpers)
+# Acesso direto à sessão do client (para helpers)
 # --------------------------------------------------------
 @pytest.fixture
 def sessao(client):
@@ -62,7 +62,7 @@ def sessao(client):
     return next(dep())
 
 # --------------------------------------------------------
-# 🔹 Helpers para criar dados no banco de teste
+# Helpers para criar dados no banco de teste
 # --------------------------------------------------------
 @pytest.fixture
 def criar_usuario(sessao):

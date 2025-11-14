@@ -22,8 +22,8 @@ def criar_usuario(client: TestClient, nome="Teste", email=None, multa: bool = Fa
     return client.post("/usuarios", json={
         "nome": nome,
         "email": email,
-        "possuimulta_aberta": multa  # aceita chave desconhecida; back-end ignora? Se necessário, troque pela correta.
-    })  # se seu schema exige exatamente 'possui_multa_aberta', mude a chave acima.
+        "possuimulta_aberta": multa  
+    })  
 
 def criar_livro(client: TestClient, titulo="Livro Teste", isbn=None, disponivel=True):
     if isbn is None:
@@ -37,14 +37,6 @@ def criar_livro(client: TestClient, titulo="Livro Teste", isbn=None, disponivel=
 # =============================================================================
 # Usuários (padrão único: limpar -> arrange -> act -> assert)
 # # =============================================================================
-# def test_criar_usuario(client: TestClient):
-#     limpar_banco_via_api()
-#     r = client.post("/usuarios", json={"nome": "Ana", "email": "ana@test.com"})
-#     assert r.status_code == 201
-#     body = r.json()
-#     assert body["nome"] == "Ana"
-#     assert body["email"] == "ana@test.com"
-#     assert "id" in body
 
 def test_criar_usuario_invalido(client: TestClient):
     limpar_banco_via_api()
@@ -179,11 +171,6 @@ def test_remover_livro_com_emprestimo_ativo(client: TestClient):
     r_del = client.delete(f"/livros/{l['id']}")
     assert r_del.status_code in (400, 409, 422)
 
-# def test_listar_livros_vazio(client: TestClient):
-#     limpar_banco_via_api()
-#     r = client.get("/livros")
-#     assert r.status_code == 200
-#     assert r.json() == []
 
 def test_listar_livros_ordenacao_paginacao(client: TestClient):
     limpar_banco_via_api()

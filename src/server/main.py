@@ -41,19 +41,6 @@ def raiz():
         "endpoints": ["/livros", "/usuarios", "/emprestimos"],
     }
 
-# Startup: cria tabelas/índices e carrega seed se vazio
-# @app.on_event("startup")
-# def startup():
-#     carregar_seed_se_vazio()
-#     inicializar_banco()
-    
-
-# @app.on_event("startup")
-# def startup():
-#     if not os.environ.get("TESTING"):  # ⚡️ só roda se não estivermos testando
-#         carregar_seed_se_vazio()
-#         inicializar_banco()
-
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -69,7 +56,7 @@ app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
 
-# 🔹 Inicialização do banco só se não for teste
+# Inicialização do banco só se não for teste
 
 @app.on_event("startup")
 def startup():
@@ -80,11 +67,11 @@ def startup():
         carregar_dados_json(sessao)
 
 
-# 🔹 Importa e inclui as rotas web
+# Importa e inclui as rotas web
 from src.server.web_ui import router as web_router
-print("✅ Router WEB carregado:", web_router)
+print("Router WEB carregado:", web_router)
 app.include_router(web_router)
-print("✅ Router WEB incluído com prefixo:", web_router.prefix)
+print("Router WEB incluído com prefixo:", web_router.prefix)
 
 from fastapi.responses import RedirectResponse
 
