@@ -122,18 +122,9 @@ Validação completa dos principais fluxos da aplicação
 
 A suíte de testes garante confiabilidade ao sistema, permitindo futuras evoluções com segurança e reduzindo riscos de regressões.
 
-📌Execução dos testes:
+## 📌Execução dos testes:
 
-
-## Instalação
-
-1. **Clone o repositório:**
-   ```bash
-   git clone https://github.com/Rossi-Luciano/teste_de_software.git
-   cd teste_de_software/mutation-testing-demo
-   ```
-
-2. **Crie um ambiente virtual (recomendado):**
+1. **Crie um ambiente virtual (recomendado):**
    ```bash
    python -m venv venv
    
@@ -144,18 +135,18 @@ A suíte de testes garante confiabilidade ao sistema, permitindo futuras evoluç
    venv\Scripts\activate
    ```
 
-3. **Instale as dependências:**
+2. **Instale as dependências:**
    ```bash
    pip install -r requirements.txt
    ```
 
-### 4. Executar Geral
+### 3. Executar Geral
 
 ```bash
 python -m pytest tests/ -v
 ```
 
-### 5. Executar Testes de Mutação
+### 4. Executar Testes de Mutação
 
 ```bash
 # Remover cache anterior (se existir)
@@ -165,16 +156,16 @@ rm -rf .mutmut-cache/
 mutmut run
 ```
 
-### 6. Executar Testes Unitário
+### 5. Executar Testes Unitário
 
 ```bash
 tests/unit --cov=aplicacao --cov-report=term-missing -v
 ```
-### 7. Executar Testes Integração
+### 6. Executar Testes Integração
 ```bash
 tests/integration --cov=aplicacao --cov-report=term-missing -v
 ```
-### 8. Executar Testes Funcional
+### 7. Executar Testes Funcional
 ```bash
 pytest tests/functional --cov=aplicacao --cov-report=term-missing -v
 ```
