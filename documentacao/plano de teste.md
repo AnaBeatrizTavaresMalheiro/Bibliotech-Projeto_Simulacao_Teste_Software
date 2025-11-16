@@ -1,4 +1,5 @@
 📋 Plano de Teste — Projeto Bibliotech
+
 🧩 1. Objetivo
 
 Garantir a qualidade, corretude e robustez das funcionalidades do sistema Bibliotech, validando desde regras de negócio até endpoints REST e integração com banco de dados.
