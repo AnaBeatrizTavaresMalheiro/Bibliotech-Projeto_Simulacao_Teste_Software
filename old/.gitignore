@@ -1,0 +1,11 @@
+**.venv**
+**cache**
+**__pycache__**
+
+**\configuracoes\__pycache__
+**\db\__pycache__
+**\server\__pycache__
+
+coverage_html**
+
+**.db**

@@ -1,0 +1,17 @@
+{
+    "exit_code_by_key": {
+        "aplicacao.configuracoes.exceptions.x\u01c1ErroBase\u01c1__init____mutmut_1": 1,
+        "aplicacao.configuracoes.exceptions.x\u01c1ErroBase\u01c1__init____mutmut_2": 1,
+        "aplicacao.configuracoes.exceptions.x\u01c1ErroBase\u01c1__init____mutmut_3": 1,
+        "aplicacao.configuracoes.exceptions.x\u01c1ErroBase\u01c1__init____mutmut_4": 1,
+        "aplicacao.configuracoes.exceptions.x_tratar_erro_personalizado__mutmut_1": 33,
+        "aplicacao.configuracoes.exceptions.x_tratar_erro_personalizado__mutmut_2": 33,
+        "aplicacao.configuracoes.exceptions.x_tratar_erro_personalizado__mutmut_3": 33,
+        "aplicacao.configuracoes.exceptions.x_tratar_erro_personalizado__mutmut_4": 33,
+        "aplicacao.configuracoes.exceptions.x_tratar_erro_personalizado__mutmut_5": 33,
+        "aplicacao.configuracoes.exceptions.x_tratar_erro_personalizado__mutmut_6": 33,
+        "aplicacao.configuracoes.exceptions.x_tratar_erro_personalizado__mutmut_7": 33,
+        "aplicacao.configuracoes.exceptions.x_tratar_erro_personalizado__mutmut_8": 33
+    },
+    "hash_by_function_name": {}
+}

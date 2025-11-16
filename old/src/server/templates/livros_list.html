@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Livros</h2>
+
+  <a href="/web/livros/novo"
+     style="display:inline-block;margin-bottom:10px;padding:6px 12px;background-color:#007bff;color:white;text-decoration:none;border-radius:4px;">
+    + Novo Livro
+  </a>
+
+  <table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>ISBN</th>
+        <th>Disp.</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in livros %}
+      <tr>
+        <td>{{ l.id }}</td>
+        <td>{{ l.titulo }}</td>
+        <td>{{ l.isbn }}</td>
+        <td>{{ 'SIM' if l.disponivel else 'NÃO' }}</td>
+
+        <td>
+
+          <!-- EDITAR -->
+          <a href="/web/livros/{{ l.id }}/editar"
+             style="padding:4px 8px; background-color:#007bff; color:white; text-decoration:none; border-radius:4px; margin-right:5px;">
+            Editar
+          </a>
+
+          <!-- DELETAR -->
+          <form method="post"
+                action="/web/livros/{{ l.id }}/deletar"
+                style="display:inline"
+                onsubmit="return confirm('Tem certeza que deseja deletar este livro?');">
+            <button type="submit"
+                    style="padding:4px 8px; background-color:#dc3545; color:white; border:none; border-radius:4px;">
+              Deletar
+            </button>
+          </form>
+        </td>
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

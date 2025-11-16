@@ -1,0 +1,29 @@
+{
+    "exit_code_by_key": {
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1__init____mutmut_1": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1listar__mutmut_1": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1listar__mutmut_2": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1obter__mutmut_1": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1obter__mutmut_2": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1obter__mutmut_3": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1obter__mutmut_4": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1obter__mutmut_5": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1obter__mutmut_6": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1obter__mutmut_7": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_1": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_2": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_3": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_4": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_5": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_6": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_7": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_8": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_9": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_10": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_11": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_12": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_13": 33,
+        "aplicacao.server.services.livro_service.x\u01c1LivroService\u01c1criar__mutmut_14": 33
+    },
+    "hash_by_function_name": {}
+}

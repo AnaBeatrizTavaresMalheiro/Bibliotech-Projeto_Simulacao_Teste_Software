@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>{{ 'Editar Livro' if livro and livro.id else 'Novo Livro' }}</h2>
+  <form method="post">
+    <label>Título: <input name="titulo" value="{{ livro.titulo if livro else '' }}"></label><br>
+    <label>ISBN: <input name="isbn" value="{{ livro.isbn if livro else '' }}"></label><br>
+    <button type="submit">Salvar</button>
+  </form>
+{% endblock %}

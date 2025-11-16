@@ -1,0 +1,9 @@
+{
+    "exit_code_by_key": {
+        "aplicacao.configuracoes.config.x_validar_estrutura__mutmut_1": 1,
+        "aplicacao.configuracoes.config.x_validar_estrutura__mutmut_2": 1,
+        "aplicacao.configuracoes.config.x_validar_estrutura__mutmut_3": 1,
+        "aplicacao.configuracoes.config.x_validar_estrutura__mutmut_4": 1
+    },
+    "hash_by_function_name": {}
+}
