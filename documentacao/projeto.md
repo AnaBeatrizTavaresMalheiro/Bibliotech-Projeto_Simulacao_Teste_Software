@@ -12,50 +12,6 @@ Regras de negócio robustas (usuário, livro e empréstimos)
 
 Estrutura modular seguindo boas práticas de arquitetura
 
-📁 1. Estrutura Geral do Projeto
-aplicacao/
-│
-├── configuracoes/
-│   ├── exceptions.py       # Exceções de regra de negócio e 404
-│   ├── settings.py         # Configurações gerais
-│   └── __init__.py
-│
-├── data/
-│   ├── usuarios.json       # Seed inicial de usuários
-│   ├── livros.json         # Seed inicial de livros
-│   └── emprestimo.json     # Seed inicial de empréstimos
-│
-├── db/
-│   ├── models.py           # Modelos SQLModel: Usuario, Livro, Emprestimo
-│   ├── sessao.py           # Configuração da Session e Engine
-│   └── database.py         # Inicialização do banco + carregamento de JSON
-│
-├── interface/
-│   ├── router_web.py       # Rotas Web com templates Jinja2
-│   │
-│   ├── static/
-│   │   └── style.css       # Estilos globais
-│   │
-│   └── templates/          # Html
-│
-├── regras_negocio/
-│   ├── regras_usuario.py
-│   ├── regras_livro.py
-│   └── regras_emprestimo.py
-│
-├── routers/
-│   ├── usuarios_router.py     # API REST Usuários
-│   ├── livros_router.py       # API REST Livros
-│   └── emprestimos_router.py  # API REST Empréstimos
-│
-├── services/
-│   ├── usuario_service.py
-│   ├── livro_service.py
-│   └── emprestimo_service.py
-│
-└── server/
-    └── main.py                # Aplicação FastAPI principal
-
 🧠 3. Fluxo de Inicialização
 
 O FastAPI inicia (startup)
